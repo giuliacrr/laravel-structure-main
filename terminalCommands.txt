@@ -1,0 +1,39 @@
+REPOSITORY TEMPLATE:
+- npm install
+- composer install
+
+AVVIO SERVER:
+- php artisan serve
+- npm run dev
+
+CREAZIONE MODEL, CONTROLLER, MIGRATION E SEEDER:
+php artisan make:model User -cms
+
+MIGRATION:
+creazione tabella DB:
+php artisan make:migration create_users_table
+
+esecuzione migration:
+php artisan migrate
+
+annulla l'ultimo migration:
+php artisan migrate:rollback
+
+aggiungere/modificare tabella:
+php artisan make:migration update_qualcosa_to_users_table
+
+CREAZIONE MODEL:
+php artisan make:model User
+User = il nome deve essere lo stesso della tabella del DB a cui si riferisce, però al singolare, in PascalCase.
+
+CREAZIONE SEEDER:
+php artisan make:seeder UsersTableSeeder 
+Il nome deve essere in PascalCase, iniziare con il nome della tabella che vogliamo popolare e finire con TableSeeder
+
+eseguire il seeder:
+php artisan db:seed UsersTableSeeder
+
+CREAZIONE CONTROLLER:
+php artisan make:controller UserController
+Il nome deve essere al singolare, in PascalCase e seguito dalla parola Controller.
+
