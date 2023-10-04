@@ -1,1 +1,10 @@
 @use "variables" as *;
+.bg-home {
+    background-color: $color-primary;
+    a {
+        color: $color-secondary;
+    }
+    a:hover {
+        color: $color-tertiary;
+    }
+}
