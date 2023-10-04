@@ -1,0 +1,318 @@
+Salva Clown {Salvatore Bono Popi [Salva Popi Clown (Buffone Clown)]
+Con il babysitting di Pietro Leone e Salvatore Bono (Clown Buffone btw) (Il Core Keeper duo maravilla).
+(Carriato malissimo da Pietro)
+
+
+CREAZIONE PROGETTO DA LAYOUT
+
+1) Duplicare il file .env.example e la copia la rinomino .env
+2) Assegnare al "DB_DATABASE" a riga 14 il nome del database (es.: DB_DATABASE=laravel_migration_seeder) e settare la riga 16 in: "DB_PASSWORD"=root;
+3) "npm install" su terminale per ricreare la cartella "node_modules", perchè non viene pushata nelle repo
+4) "composer install" su terminale stesso motivo sopra ma con la cartella "vendor" di Laravel
+_________________________________________________________________________________________________
+CREAZIONE PROGETTO DA ZERO
+
+NEL TERMINALE:
+
+composer create-project laravel/laravel example-app
+npm install bootstrap													//sconsiglio
+npm install sass -D
+npm install
+
+
+SU VSC:
+
+1) rinominare la cartella "resources/css" in "resources/scss"
+2) cambiare l'estensione del file "resources/scss/app.css" in ".scss"
+3) modificare il file "vite.config.js" sostituendo i "css" in "scss"
+4) cancellare il file "resources/js/bootstrap.js"
+5) svuotare il file "resources/js/app.js"
+6) aggiungere nel file ".scss" principale: "@import "bootstrap";"
+
+7) eseguire su TERMINALE: "php artisan serve"
+8) in un altro terminale, avviare la compilazione dei file eseguendo: "npm run dev"
+
+9) nell'head del template ".blade", aggiungere la riga: "@vite(['resources/scss/app.scss', 'resources/js/app.js'])"					//carica l'scss e il js all'interno della pagina
+10) nel file .env assegnare al "DB_DATABASE" a riga 14 il nome del database (es.: DB_DATABASE=laravel_migration_seeder) e settare la riga 16 in: "DB_PASSWORD"=root;
+11) svuotare il file ".blade" ed eventualmente cambiargli nome, insieme al path del ROUTE nel file "web.php"
+	
+_________________________________________________________________________________________________
+ESERCIZIO LARAVEL_MIGRATION_SEEDER
+----------------------------------
+MIGRATION
+
+NEL TERMINALE:
+php artisan make:migration create_trains_table									//"create" indica che stiamo creando. "trains" è il nome da noi assegnato. "table" indica che è una tabella
+
+
+NEL FILE APPENA CREATO:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('trains', function (Blueprint $table) {
+            $table->id();														//pre-impostato
+
+            $table->string("azienda");											//vengono aggiunte colonne alla tabella. tipoDato("nomeColonna);
+            $table->string("stazione_di_partenza");
+            $table->string("stazione_di_arrivo");
+            $table->time("orario_di_partenza");
+            $table->time("orario_di_arrivo");
+            $table->integer("codice_treno");
+            $table->integer("numero_carrozze")->nullable();
+            $table->boolean("in_orario")->nullable();
+            $table->boolean("cancellato")->nullable();
+
+            $table->timestamps();												//pre-impostato
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('trains');
+    }
+};
+
+
+SU TERMINALE:
+php artisan migrate																//pusha la tabella con le colonne create
+
+_________________________________________________________________________________________________
+MODEL: è la rappresentazione sotto forma di classe di una tabella del nostro Database
+
+NEL TERMINALE:
+php artisan make:model Train													//il nome del model deve essere lo stesso della tabella del DB ma in PascalCase e al singolare. Tabella: "create_trains_table" -> Model: "Train"
+
+
+IL FILE APPENA CREATO (non va toccato):
+<?php																			//tutto pre-impostato e non va toccato.
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Train extends Model
+{
+    use HasFactory;
+}
+_________________________________________________________________________________________________
+SEEDER: mette a disposizione una sistema per inserire dati, di tipologia mySql, in una tabella
+
+NEL TERMINALE:
+php artisan make:seeder TrainsTableSeeder										//crea un seeder all’interno della cartella "database/seeders". Il nome deve essere in PascalCase, iniziare con il nome della tabella
+																				//che vogliamo popolare e finire con TableSeeder.
+
+NEL FILE APPENA CREATO:																				
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Train;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Faker\Generator as Faker;													//importa la libreria che genera dati falsi (es.: un lorem ipsum contestualizzabile)
+
+class TrainsTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(Faker $faker): void										//indicare i faker come argomento della funzione
+    {
+        for ($i=0; $i<20; $i++) {												//genera "i<20" elementi "Train"
+            $newTrain = new Train();
+
+            $newTrain->azienda = $faker->company();								//alla colonna "azienda" viene creato un dato falso di tipo "company" con il metodo "$faker->name()"
+            $newTrain->stazione_di_partenza = $faker->city();					//di tipo "city"
+            $newTrain->stazione_di_arrivo = $faker->city();
+            $newTrain->orario_di_partenza = $faker->time();
+            $newTrain->orario_di_arrivo = $faker->time();
+            $newTrain->codice_treno = $faker->numberBetween(0, 999999);
+            $newTrain->numero_carrozze = $faker->numberBetween(0, 10);
+            $newTrain->in_orario = $faker->boolean();
+            $newTrain->cancellato = $faker->boolean();
+
+            $newTrain->save();													//pre-impostato
+        }
+    }
+}
+
+NEL TERMINALE:
+php artisan db:seed TrainsTableSeeder											//per popolare la tabella di dati
+_________________________________________________________________________________________________
+UPDATE DEL DATABASE
+
+NEL TERMINALE:
+php artisan make:migration update_data_to_trains_table								//crea una seconda migration per aggiornare la "trains" "table" aggiungendo la colonna "data"
+
+
+NEL FILE APPENA CREATO:
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('trains', function (Blueprint $table) {
+            $table->date("data")->after("stazione_di_arrivo");						//aggiunge la colonna "data" dopo la colonna "stazione_di_arrivo"
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void													//pre-impostato e si lascia così
+    {
+        Schema::table('trains', function (Blueprint $table) {
+            $table->dropColumn("data");
+        });
+    }
+};
+
+
+NEL FILE "TrainsTableSeeder.php" aggiungere non dopo del "save()":
+$newTrain->data = $faker->dateTimeInInterval("now", '2 weeks');						//una data che va da oggi a 2 settimane da oggi. Non è ancora presente nella tabella
+
+
+NEL TERMINALE:
+php artisan migrate																	//per aggiornare la tabella con la nuova colonna
+php artisan db:seed TrainsTableSeeder												//per ripopolare la tabella di dati
+
+SE NON DOVESSE FUNZIONARE:
+selezionare tutti gli elementi nel sito "localhost/phpMyAdmin" tramite "check all" ed eliminarli tutti. Dopodichè ripetere gli ultimi 1 o 2 comandi del terminale ("migrate" e "db:seed")
+_________________________________________________________________________________________________
+CONTROLLER: legge i dati del DB e li passa alla view (al frontend)
+
+SU TERMINALE:
+php artisan make:controller TrainController										//deve avere lo stesso nome della tabella, essere al singolare, in PascalCase e seguito dalla parola "Controller"
+
+NEL FILE APPENA CREATO:
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Train;
+
+class TrainController extends Controller
+{
+    public function index() {
+        $data = [
+            "trains" => Train::all()											//la variabile "trains" è un array di tutti gli elementi della tabella "Train"
+        ];
+        return view("home", $data);												//passa sè stessa alla "View" di "home". Viene richiamata tramite "$trains"
+    }
+}
+_________________________________________________________________________________________________
+ROUTE: indirizzo web dopo lo '/'. è un modo di passare funzioni all'html
+
+NEL FILE "web.php"
+
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrainController;
+
+Route::get('/', [TrainController::class, "index"]);								//Passa alla rotta "'/'" la funzione "index" che si trova nel "TrainController"
+
+-------
+è equivalente allo scrivere la funzione tra tag <?php ?> direttamente nel file .blade. In questo modo però è più leggibile e le funzioni possono venire richiamate da più .blade
+
+si può anche scrivere il CONTROLLER direttamente nella ROUTE:
+	Route::get('/', [TrainController::class, function() {
+        $data = [
+            "trains" => Train::all()
+        ];
+        return view("home", $data);
+    }]);
+_________________________________________________________________________________________________
+MOSTRARE I DATI SU SCHERMO
+
+{{$trains}}								//mostra tutto l'array nel frontend.
+
+{{$trains[0]["azienza"]}}				//mostra "azienda" dell'elemento di indice [0] dell'array
+
+@foreach ($trains as $train)			//per usare {{$train["azienda"]}}                                                                                                               
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                                                                                                                                                                        
+                                                          .... .,....                                                                                                                                   
+                                                       ...*/(((##(/####/,*.   ...*/      .   .                                                                                                          
+                                                     .**(/,/(##&%&&%%%%%&&%##(,//*,(,/(*  . *...       .                                                                                                
+                                            .  ..../(***((%&&&&%%%%%%&&#@&%%@&&%%%&&%%%(((**/.(#*.. . .                                                                                                 
+                                              ,*/#%%%(#%%%&&&&&#&#&%&&&%@@@@&@&&&&%&@@&&%%&#%(/*/(,. ..                                                                                                 
+                                         .  ..**,*#%/##%%&%&&@@@&%&@@&&&@&@@@@@@&&&&@@@@&&&&%&%%%%(*...                                                                                                 
+                                       .   ....,*(###%#%%%%%@&@@@@&@&@@@&@&&@@@@@&@&@@@@@@&@&&&%&&%#,,.                                                                                                 
+                                      . ..,**/##%&&%%#%%#%%&%&&@@@@@@@@@@@&&@@@@@&@&@@@@@@&@&&&&&&&%#,,                                                                                                 
+                                       ...,/(#%%%%%%%&&&%&&&%%&&@@&&&&&&&&&&&&&&@&&&@@@@@@&@&&&&&&&%##..                                                                                                
+                                         .,*#%%%%%%%%%%%&%%&%%%%####(((((((#(((##%%&&&&&&&&&&&&&&&&%%#,.                                                                                                
+                                        .,/#%&&&%%&%&&%%#%###((////*********,,******///((#%%&&&&@&&&&&(*..                                                                                              
+                                      .../#%%%%%&%%%%%%#/**,,,,,,,,,......,,,,,.,,,,,,,,,**/((###%%%%&&%/,..                                                                                            
+                                      ../##%%%%&&&%#/**,,,,,,.........................,,,,,****////#%(%#%%,                                                                                             
+                                       ,/#%%%&&&%(****,,,,,,,,........................,,,,,,*******/(####(                                                                                              
+                                      ..*#%%%%#(/***,,,,,,,,,,,......................,,,,,,,,,*******/%%%%(.                                                                                            
+                                       .(%%%#((******,,,,,,,,,,,,....................,,,,,,,**********(####.                                                                                            
+                                        ##%#(********,,,,,,,,,,,.....................,,,,,,,,*********/#%##/                                                                                            
+                                       .####(/********,,,,,,,,,,.....................,,,,,,,,,*********####(                                                                                            
+                                        (###(/*******,,,,,,,,,,,,.,..................,,,,,,,,,,,,,*****/###(                                                                                            
+                                        /###/******,,,,,,,,,,,,,,,,,,,,,......,,,,,*//((/,/%%%%#/,******(##/                                                                                            
+                                         ##(/******,,/%&%((######&%/(*,,,,,,,,,,*/#%###%%%#(//***(#/&&&**(((                                                                                            
+                                         #((****/%%/*,,,,,***/((##(((/@***,.,,**&((((#((///////////**(&**/((                                                                                            
+                                         (((***#%%*****//((//(%%##(((//&&,...,*&(###%##&&(%&&#//(///**&**///                                                                                            
+                                         *((****((**/(((&#&%&&&##%#//(/%%,,..,,&//*#(///%%%%((#%%(/***%***/*,,,*,                                                                                       
+                                     .,,*,./*****%*//((##(///*********(&,,,..,,*@(*****//////////****#*******(((*                                                                                       
+                                     /(/,,*/******#***///**////*******(**,,..,,**#*,,,,*******,,,***&*******/*//*                                                                                       
+                                     *(/*/*********#,,,,,****,,,,,,,,&*,,,,..,,,**//#,,,,,,,,,,,,/(,,,****//***/,                                                                                       
+                                     ******/*****,,,,,&*,,,,,,,,,*&,/**,,,,...,,,,**/*,,,,,,,.,,,,,,,,*******,*,,                                                                                       
+                                     ,,*,*//*****,,*,,,,,,,,,,,,*****,,,,,,...,,,,,,************,***,*******,,,,                                                                                        
+                                      ,*,,,,*******,,,,*,*,,,,,,,,,*,,*,,,,,,,,,,********,,,,,,,,,,,,*******,,,                                                                                         
+                                       ,,,**********,,,,,,,,,,,,,,,//(#%%/*****/%##(/*,,*/***,,,*,*********,,,.                                                                                         
+                                        ,*,,,********,,,,,,,,,,,,,,**///((((((((((/****,***//*************,,,,,                                                                                         
+                                        .,,,*,*********,,,,*,,,,,*,*,*,***/(((/**/*,,********/***********/****,                                                                                         
+                                         ,,,**/*******************,,,,,,,**,,,********,,******,,********.                                                                                               
+                                           .   .********,,,*******////////*////(((//**/##**,**,,********                                                                                                
+                                                ********,,,,***********,,,,,,,,********,**,,,,**/******                                                                                                 
+                                                 ***********,,,,,,,,********///////*******,,,*********                                                                                                  
+                                                  ,***********,,,,,****//////(////****,,,*********/**                                                                                                   
+                                                  .**********,,,,,,,,,,,,,,,,,,,,,,,,,,,,******////**                                                                                                   
+                                                   ************,,,,,,,,,,,.......,,,,,,,*****////*/**                                                                                                   
+                                                   *********/******,,,,,,,,,,,,,,,,,,****//////////**                                                                                                   
+                                                   ,****/////*/*********,**************///////////***..                                                                                                 
+                                                   ,*****/////////////*/////*/////////////////////***(,..                                                                                               
+                                                  .,*******/////////////////////////((/(////////*****(/,                                                                                                
+                                                ../*********/////////////////(//(/(//(////////*******##(.  .                                                                                            
+                                                ,/(/************////////////(/////(///////***********/#%(,                                                                                              
+                                               ,((#/************///**////////////////////*************/#%,                                                                                              
+                                              ./#%#/*********************//////////////**********,****/((.                                                                                              
+                                         ..  .,/%(//****,*,*****************/////*************,,,*****/*     .          .                                                                               
+                                         .  .,.,(/******,,,,********************************,,,,,******       .                                                                                         
+                                             . ,(*******,,,,,,,,,************************,,,,,,,,*****                                                                                                  
+                                          .   ../******,,,,,,,,,,,,,,,,***************,,,,,,,,,,,****          .                                                                                        
+                                               ..******,,,,,,,,,,,,,,,,,,,,,,,,*,,,**,,,,,,,,,,,,,**             .                                                                                      
+                                                  .***,,,,,,,,,,,,,,,,,,,,,,,,*****,,,,,,,,,,,,,,,,.                                                                                                    
+                                                    .,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,..  ,    .***,,.                                                                                       
+                                                     ..,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,.          *********.                                                                                     
+                                                        .,,,,.,,,,,,,,,,,,,,,,,,,,,,,,,,,,...           ************,..                                                                                 
+                                                           ,.........,,,,,.,,....,.........          .,,,,,,,,,,,,.....                                                                                 
+                                                               .,........................       .,,,,,,,.....  .
+															   https://onlyfans.com/salvatorebono
